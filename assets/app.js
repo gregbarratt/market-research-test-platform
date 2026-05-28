@@ -381,7 +381,24 @@
       const quote = request && Array.isArray(request.agentQuotes)
         ? request.agentQuotes.find((item) => item.agent === agent)
         : null;
-      if (request && quote) downloadQuotePdf(request, quote);
+      if (request && quote) {
+        const originalLabel = target.textContent;
+        target.textContent = "Preparing PDF...";
+        target.disabled = true;
+
+        try {
+          downloadQuotePdf(request, quote);
+          target.textContent = "PDF downloaded";
+        } catch (error) {
+          console.error("PDF download failed", error);
+          target.textContent = "Try again";
+        }
+
+        window.setTimeout(() => {
+          target.disabled = false;
+          target.textContent = originalLabel || "Retrieve PDF";
+        }, 1800);
+      }
     }
   }
 
@@ -422,12 +439,15 @@
     const pdf = buildSmartQuotePdf(request, quote);
     const blob = new Blob([pdf], { type: "application/pdf" });
     const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(blob);
+    link.href = url;
     link.download = filename;
+    link.target = "_blank";
+    link.rel = "noopener";
     document.body.appendChild(link);
     link.click();
     link.remove();
-    window.setTimeout(() => URL.revokeObjectURL(link.href), 500);
+    window.setTimeout(() => URL.revokeObjectURL(url), 30000);
   }
 
   function ensureHtml2Pdf() {
@@ -1145,6 +1165,17 @@
       .replaceAll("\\", "\\\\")
       .replaceAll("(", "\\(")
       .replaceAll(")", "\\)");
+  }
+
+  function getInitials(value) {
+    const initials = String(value || "")
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((word) => word.charAt(0).toUpperCase())
+      .join("");
+
+    return initials || "QT";
   }
 
   function slugify(value) {
