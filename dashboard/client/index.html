@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Client Dashboard</title>
+    <link rel="stylesheet" href="../../assets/styles.css" />
+  </head>
+  <body class="dashboard-page">
+    <div class="dashboard-shell">
+      <aside class="sidebar">
+        <div class="sidebar-logo">
+          <a class="brand dashboard-brand" href="../../" aria-label="Home">
+            <span class="brand-plane"></span>
+          </a>
+        </div>
+        <nav class="side-nav" aria-label="Client dashboard">
+          <a href="../../"><span class="side-icon icon-home"></span>Main Website</a>
+          <a class="active" href="./"><span class="side-icon icon-dashboard"></span>Dashboard</a>
+          <a href="#"><span class="side-icon icon-account"></span>Account Details</a>
+          <a href="tour-request/new/"><span class="side-icon icon-pin"></span>Tour Request</a>
+          <a href="#"><span class="side-icon icon-history"></span>Work History</a>
+          <a href="#"><span class="side-icon icon-support"></span>Support</a>
+        </nav>
+      </aside>
+
+      <main class="dashboard-main">
+        <header class="dashboard-topbar">
+          <button class="menu-button" type="button" aria-label="Open menu"><span></span></button>
+          <div>
+            <p>Client Dashboard</p>
+            <strong>Dashboard</strong>
+          </div>
+          <div class="topbar-actions">
+            <a class="home-link" href="../../">Main Website</a>
+            <span class="avatar">GB</span>
+          </div>
+        </header>
+
+        <section class="client-dashboard-wrap">
+          <div class="dashboard-hero-row">
+            <div>
+              <p class="dashboard-eyebrow">Quote Requests</p>
+              <h1>Your Holiday Quotes</h1>
+            </div>
+            <a class="submit-button" href="tour-request/new/">New Quote Request</a>
+          </div>
+
+          <div class="dashboard-stats">
+            <article>
+              <span id="statTotal">0</span>
+              <p>Total Requests</p>
+            </article>
+            <article>
+              <span id="statPending">0</span>
+              <p>Awaiting Quotes</p>
+            </article>
+            <article>
+              <span>5</span>
+              <p>Max Verified Agents</p>
+            </article>
+          </div>
+
+          <div class="quote-list-panel">
+            <div class="quote-list-heading">
+              <h2>Requested Quotes</h2>
+              <p>Submitted holiday quote requests will appear here.</p>
+            </div>
+            <div class="quote-request-list" id="quoteRequestsList"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="../../assets/app.js"></script>
+  </body>
+</html>

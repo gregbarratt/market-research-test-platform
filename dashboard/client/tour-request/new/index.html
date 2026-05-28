@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Request a New Tour</title>
+    <link rel="stylesheet" href="../../../../assets/styles.css" />
+  </head>
+  <body class="dashboard-page">
+    <div class="dashboard-shell">
+      <aside class="sidebar">
+        <div class="sidebar-logo">
+          <a class="brand dashboard-brand" href="../../../../" aria-label="Home">
+            <span class="brand-plane"></span>
+          </a>
+        </div>
+        <nav class="side-nav" aria-label="Client dashboard">
+          <a href="../../../../"><span class="side-icon icon-home"></span>Main Website</a>
+          <a href="../../"><span class="side-icon icon-dashboard"></span>Dashboard</a>
+          <a href="#"><span class="side-icon icon-account"></span>Account Details</a>
+          <a class="active" href="./"><span class="side-icon icon-pin"></span>Tour Request</a>
+          <a href="#"><span class="side-icon icon-history"></span>Work History</a>
+          <a href="#"><span class="side-icon icon-support"></span>Support</a>
+        </nav>
+      </aside>
+
+      <main class="dashboard-main">
+        <header class="dashboard-topbar">
+          <button class="menu-button" type="button" aria-label="Open menu"><span></span></button>
+          <div>
+            <p>Client Dashboard</p>
+            <strong>Tour Request</strong>
+          </div>
+          <div class="topbar-actions">
+            <a class="home-link" href="../../../../">Main Website</a>
+            <span class="avatar">GB</span>
+          </div>
+        </header>
+
+        <section class="request-form-wrap">
+          <div class="request-titlebar">
+            <h1>Request a New Tour</h1>
+            <a class="back-button" href="../../../../">Back</a>
+          </div>
+
+          <form class="qmt-form" id="tourRequestForm" novalidate>
+            <div class="form-section-title"><span>Tour Information</span></div>
+
+            <label class="field full">
+              <span>Tour Title <b>*</b></span>
+              <input name="title" type="text" placeholder="e.g. Package Holiday for 2 weeks" />
+              <small data-error-for="title"></small>
+            </label>
+
+            <label class="field">
+              <span>Tour Type <b>*</b></span>
+              <select name="tourType">
+                <option value="">Select tour type</option>
+                <option>Package Holiday</option>
+                <option>Luxury Holiday</option>
+                <option>Adventure Holiday</option>
+                <option>City Break</option>
+                <option>Cultural Holiday</option>
+                <option>Beach Holiday</option>
+                <option>Ski Holiday</option>
+                <option>Cruise Holiday</option>
+              </select>
+              <small data-error-for="tourType"></small>
+            </label>
+
+            <label class="field">
+              <span>Destination <b>*</b></span>
+              <input name="destination" type="text" placeholder="e.g. United Kingdom, Paris, Japan" />
+              <small data-error-for="destination"></small>
+            </label>
+
+            <label class="field">
+              <span>Departure Airport <b>*</b></span>
+              <input name="departureAirport" type="text" placeholder="e.g. Manchester, London Gatwick, Birmingham" />
+              <small data-error-for="departureAirport"></small>
+            </label>
+
+            <div class="form-section-title"><span>Travel Details</span></div>
+
+            <label class="field">
+              <span>Start Date <b>*</b></span>
+              <input name="dateFrom" type="date" />
+              <small data-error-for="dateFrom"></small>
+            </label>
+
+            <label class="field">
+              <span>End Date <b>*</b></span>
+              <input name="dateTo" type="date" />
+              <small data-error-for="dateTo"></small>
+            </label>
+
+            <label class="field">
+              <span>Adults <b>*</b></span>
+              <input name="adults" type="number" min="1" placeholder="e.g. 2" />
+              <small data-error-for="adults"></small>
+            </label>
+
+            <label class="field">
+              <span>Children</span>
+              <input name="children" type="number" min="0" placeholder="e.g. 2" />
+              <small data-error-for="children"></small>
+            </label>
+
+            <div class="child-ages full" id="childAgesWrap" hidden>
+              <div class="child-ages-heading">
+                <span>Children's Ages <b>*</b></span>
+                <em>Add one age for each child.</em>
+              </div>
+              <div class="child-age-grid" id="childAgeGrid"></div>
+              <small data-error-for="childAges"></small>
+            </div>
+
+            <label class="field">
+              <span>Budget (&pound;) <b>*</b></span>
+              <input name="budget" type="text" placeholder="e.g. &pound;20,000 or Flexible" />
+              <small data-error-for="budget"></small>
+            </label>
+
+            <div class="form-section-title"><span>Requirements</span></div>
+
+            <label class="field full">
+              <span>Tour Description &amp; Requirements</span>
+              <textarea name="description" rows="5" placeholder="Describe what you are looking for in this tour - accommodation preferences, activities, special requirements, dietary needs, etc."></textarea>
+            </label>
+
+            <label class="field full">
+              <span>Existing Booking or Quote Link</span>
+              <input name="bookingLink" type="url" placeholder="Paste a Jet2 Holidays, easyJet Holidays, TUI, or other booking link" />
+              <small data-error-for="bookingLink"></small>
+            </label>
+
+            <div class="form-section-title"><span>Attachments</span></div>
+
+            <div class="upload-area full">
+              <button class="upload-button" id="uploadTrigger" type="button">
+                <span class="upload-icon"></span>
+                <strong>Click to upload files</strong>
+                <em>Attach quotes, images, or reference documents (PNG, JPG, PDF)</em>
+              </button>
+              <input id="fileInput" name="attachments" type="file" multiple accept=".png,.jpg,.jpeg,.pdf,.doc,.docx" />
+              <div class="file-chips" id="fileChips"></div>
+            </div>
+
+            <div class="form-actions full">
+              <a class="cancel-button" href="../../../../">Cancel</a>
+              <button class="submit-button" type="submit">Submit Request</button>
+            </div>
+          </form>
+
+          <div class="success-panel" id="successPanel" hidden>
+            <div class="success-icon"></div>
+            <h2>Tour Request Submitted!</h2>
+            <p>Your request has been sent. Agents will review and submit proposals shortly.</p>
+            <a class="submit-button" href="../../">View Dashboard</a>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="../../../../assets/app.js"></script>
+  </body>
+</html>
