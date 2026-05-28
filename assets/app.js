@@ -535,7 +535,7 @@
       if (returnUrl && returnUrl.startsWith(window.location.origin)) {
         window.location.href = returnUrl;
       } else {
-        window.location.href = "../dashboard/client/";
+        window.location.href = formNode.dataset.dashboardPath || "../dashboard/client/";
       }
     });
   }

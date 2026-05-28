@@ -3,371 +3,46 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Research Prototype</title>
+    <title>Client Login</title>
     <link rel="stylesheet" href="assets/styles.css" />
   </head>
-  <body class="landing-page">
-    <header class="site-header">
-      <a class="brand" href="./" aria-label="Home">
-        <span class="brand-plane"></span>
-      </a>
-      <nav class="desktop-nav" aria-label="Main navigation">
-        <a class="is-active" href="#home">Home</a>
-        <a href="#cruise-tours">Cruise Tours</a>
-        <a href="#how-it-works">How It Works</a>
-        <a href="#agents">Agents</a>
-      </nav>
-      <div class="header-actions">
-        <a class="pill-button header-dashboard-link" href="login/">View Dashboard</a>
-        <button class="icon-button icon-heart" type="button" aria-label="Saved trips"></button>
-        <button class="icon-button icon-user" type="button" aria-label="Account"></button>
-      </div>
-    </header>
-
-    <main>
-      <section class="hero" id="home">
-        <div class="hero-grid"></div>
-        <div class="spark spark-one"></div>
-        <div class="spark spark-two"></div>
-        <div class="spark spark-three"></div>
-        <div class="floating-card floating-left">
-          <p>Recruitment Process</p>
-          <span>Complete</span>
-          <span>Complete</span>
-          <span class="warm">In Progress</span>
-          <b>Linda Marshal</b>
-        </div>
-        <div class="floating-card floating-right">
-          <p>Activity Feed</p>
-          <span>Marvin McKinney</span>
-          <span>Ron Cooper</span>
-          <span>Jenny Wilson</span>
-          <b>Stive Jackson</b>
-        </div>
-        <div class="hero-content">
-          <h1>
-            <span>Tell us about your holiday</span>
-          </h1>
-          <p class="hero-subtitle">and receive quotes from up to <b>5 verified agents.</b></p>
-          <form class="hero-search" id="heroSearch">
-            <input id="tripPrompt" type="text" placeholder="Enter destination or cruise type (e.g. Dubai Cruise, Family Tour)" />
-            <button type="submit">Request Quote</button>
-          </form>
-        </div>
-      </section>
-
-      <section class="trip-types" id="cruise-tours">
-        <h2>Choose Your <strong>Trip Type</strong></h2>
-        <div class="trip-grid">
-          <a class="trip-card" href="dashboard/client/tour-request/new/">
-            <span class="trip-symbol trip-package"></span>
-            <span>Package Holidays</span>
-          </a>
-          <a class="trip-card" href="dashboard/client/tour-request/new/">
-            <span class="trip-symbol trip-luxury"></span>
-            <span>Luxury Holidays</span>
-          </a>
-          <a class="trip-card" href="dashboard/client/tour-request/new/">
-            <span class="trip-symbol trip-cruise"></span>
-            <span>(Fly / Cruise Only)</span>
-          </a>
-          <a class="trip-card" href="dashboard/client/tour-request/new/">
-            <span class="trip-symbol trip-disney"></span>
-            <span>Disney Trips</span>
-          </a>
-          <a class="trip-card" href="dashboard/client/tour-request/new/">
-            <span class="trip-symbol trip-multicentre"></span>
-            <span>Multi-Centre Trips</span>
-          </a>
-          <a class="trip-card" href="dashboard/client/tour-request/new/">
-            <span class="trip-symbol trip-custom"></span>
-            <span>Custom Travel</span>
-          </a>
-        </div>
-      </section>
-
-      <section class="travel-marketplace" aria-label="Holiday marketplace highlights">
-        <div class="market-row">
-          <div class="market-row-heading">
-            <div>
-              <h2>Trending Destinations</h2>
-              <p>Popular places our customers love right now</p>
-            </div>
-            <div class="market-controls">
-              <a href="dashboard/client/tour-request/new/">View all</a>
-              <button type="button" aria-label="Previous destinations"></button>
-              <button type="button" aria-label="Next destinations"></button>
-            </div>
-          </div>
-          <div class="market-scroll">
-            <a class="destination-card greece" href="dashboard/client/tour-request/new/?title=Greece%20Holiday&tourType=Beach%20Holiday&destination=Greece&departureAirport=Any%20UK%20airport&adults=2&children=0&budget=%C2%A3299%20pp">
-              <span class="heart-mark"></span>
-              <strong>Greece</strong>
-              <em>From &pound;299 pp</em>
-            </a>
-            <a class="destination-card dubai sponsored" href="dashboard/client/tour-request/new/?title=Dubai%20Holiday&tourType=Luxury%20Holiday&destination=Dubai%2C%20UAE&departureAirport=Manchester%20%28MAN%29&adults=2&children=0&budget=%C2%A3399%20pp">
-              <span class="sponsor-pill">Sponsored</span>
-              <span class="heart-mark"></span>
-              <strong>Dubai</strong>
-              <em>From &pound;399 pp</em>
-            </a>
-            <a class="destination-card tenerife" href="dashboard/client/tour-request/new/?title=Tenerife%20Holiday&tourType=Beach%20Holiday&destination=Tenerife&departureAirport=Any%20UK%20airport&adults=2&children=0&budget=%C2%A3249%20pp">
-              <span class="heart-mark"></span>
-              <strong>Tenerife</strong>
-              <em>From &pound;249 pp</em>
-            </a>
-            <a class="destination-card thailand" href="dashboard/client/tour-request/new/?title=Thailand%20Holiday&tourType=Luxury%20Holiday&destination=Thailand&departureAirport=London%20Heathrow%20%28LHR%29&adults=2&children=0&budget=%C2%A3599%20pp">
-              <span class="heart-mark"></span>
-              <strong>Thailand</strong>
-              <em>From &pound;599 pp</em>
-            </a>
-            <a class="destination-card maldives" href="dashboard/client/tour-request/new/?title=Maldives%20Holiday&tourType=Luxury%20Holiday&destination=Maldives&departureAirport=London%20Gatwick%20%28LGW%29&adults=2&children=0&budget=%C2%A3999%20pp">
-              <span class="heart-mark"></span>
-              <strong>Maldives</strong>
-              <em>From &pound;999 pp</em>
-            </a>
-            <a class="destination-card newyork" href="dashboard/client/tour-request/new/?title=New%20York%20City%20Break&tourType=City%20Break&destination=New%20York&departureAirport=Any%20London%20airport&adults=2&children=0&budget=%C2%A3499%20pp">
-              <span class="heart-mark"></span>
-              <strong>New York</strong>
-              <em>From &pound;499 pp</em>
-            </a>
-          </div>
-        </div>
-
-        <div class="market-row">
-          <div class="market-row-heading">
-            <div>
-              <h2>Featured Holiday Deals</h2>
-              <p>Handpicked offers for unforgettable experiences</p>
-            </div>
-            <div class="market-controls">
-              <a href="dashboard/client/tour-request/new/">View all</a>
-              <button type="button" aria-label="Previous deals"></button>
-              <button type="button" aria-label="Next deals"></button>
-            </div>
-          </div>
-          <div class="market-scroll deal-scroll">
-            <a class="deal-card turkey sponsored" href="dashboard/client/tour-request/new/?title=All%20Inclusive%20Turkey&tourType=Package%20Holiday&destination=Turkey&departureAirport=Manchester%20%28MAN%29&adults=2&children=0&budget=%C2%A3279%20pp">
-              <span class="sponsor-pill">Sponsored</span>
-              <span class="heart-mark"></span>
-              <strong>All Inclusive in Turkey</strong>
-              <span>7 Nights - All Inclusive</span>
-              <em>From &pound;279 pp</em>
-              <b>View Deal</b>
-            </a>
-            <a class="deal-card mauritius" href="dashboard/client/tour-request/new/?title=Mauritius%20Paradise&tourType=Luxury%20Holiday&destination=Mauritius&departureAirport=London%20Gatwick%20%28LGW%29&adults=2&children=0&budget=%C2%A3899%20pp">
-              <span class="heart-mark"></span>
-              <strong>Mauritius Paradise</strong>
-              <span>7 Nights - Half Board</span>
-              <em>From &pound;899 pp</em>
-              <b>View Deal</b>
-            </a>
-            <a class="deal-card mediterranean sponsored" href="dashboard/client/tour-request/new/?title=Mediterranean%20Cruise&tourType=Cruise%20Holiday&destination=Mediterranean&departureAirport=Any%20London%20airport&adults=2&children=0&budget=%C2%A3699%20pp">
-              <span class="sponsor-pill">Sponsored</span>
-              <span class="heart-mark"></span>
-              <strong>Mediterranean Cruise</strong>
-              <span>7 Nights - Full Board</span>
-              <em>From &pound;699 pp</em>
-              <b>View Deal</b>
-            </a>
-            <a class="deal-card dubai-deal" href="dashboard/client/tour-request/new/?title=Dubai%20Luxury%20Escape&tourType=Luxury%20Holiday&destination=Dubai%2C%20UAE&departureAirport=Manchester%20%28MAN%29&adults=2&children=0&budget=%C2%A3499%20pp">
-              <span class="heart-mark"></span>
-              <strong>Dubai Luxury Escape</strong>
-              <span>5 Nights - Room Only</span>
-              <em>From &pound;499 pp</em>
-              <b>View Deal</b>
-            </a>
-            <a class="deal-card caribbean sponsored" href="dashboard/client/tour-request/new/?title=Caribbean%20Getaway&tourType=Beach%20Holiday&destination=Caribbean&departureAirport=London%20Gatwick%20%28LGW%29&adults=2&children=0&budget=%C2%A3799%20pp">
-              <span class="sponsor-pill">Sponsored</span>
-              <span class="heart-mark"></span>
-              <strong>Caribbean Getaway</strong>
-              <span>7 Nights - All Inclusive</span>
-              <em>From &pound;799 pp</em>
-              <b>View Deal</b>
-            </a>
-          </div>
-        </div>
-
-        <div class="market-row">
-          <div class="market-row-heading">
-            <div>
-              <h2>Agent Spotlight</h2>
-              <p>Top performing agents, here to plan your perfect trip</p>
-            </div>
-            <div class="market-controls">
-              <a href="#agents">View all</a>
-              <button type="button" aria-label="Previous agents"></button>
-              <button type="button" aria-label="Next agents"></button>
-            </div>
-          </div>
-          <div class="market-scroll agent-scroll">
-            <article class="agent-card spotlight">
-              <span class="sponsor-pill">Spotlight</span>
-              <span class="agent-avatar">SW</span>
-              <div><strong>Sophie Williams</strong><span>Luxury Travel Specialist</span><em>23 bookings this month</em><button type="button">View Profile</button></div>
-            </article>
-            <article class="agent-card">
-              <span class="agent-avatar">JC</span>
-              <div><strong>James Carter</strong><span>Cruise Specialist</span><em>18 bookings this month</em><button type="button">View Profile</button></div>
-            </article>
-            <article class="agent-card">
-              <span class="agent-avatar">AK</span>
-              <div><strong>Aisha Khan</strong><span>Family Holiday Expert</span><em>31 bookings this month</em><button type="button">View Profile</button></div>
-            </article>
-            <article class="agent-card spotlight">
-              <span class="sponsor-pill">Spotlight</span>
-              <span class="agent-avatar">MB</span>
-              <div><strong>Michael Brown</strong><span>Adventure Travel Expert</span><em>17 bookings this month</em><button type="button">View Profile</button></div>
-            </article>
-            <article class="agent-card">
-              <span class="agent-avatar">EJ</span>
-              <div><strong>Emma Johnson</strong><span>City Break Specialist</span><em>17 bookings this month</em><button type="button">View Profile</button></div>
-            </article>
-          </div>
-        </div>
-
-        <div class="partner-strip">
-          <h2>Sponsored Travel Partners</h2>
-          <div>
-            <span>Jet2 Holidays</span>
-            <span>easyJet Holidays</span>
-            <span>TUI</span>
-            <span>Princess Cruises</span>
-            <span>Virgin Voyages</span>
-          </div>
-        </div>
-      </section>
-
-      <section class="live-requests">
-        <div class="section-kicker">Live</div>
-        <h2>Travel Requests</h2>
-        <div class="request-grid">
-          <article class="request-card">
-            <img src="assets/trip-images/mediterranean-cruise.png" alt="Cruise ship sailing beside a Mediterranean coastal town" />
-            <div>
-              <span class="badge">Seasonal</span>
-              <h3>Mediterranean Cruise</h3>
-              <dl>
-                <div><dt>Travel Date</dt><dd>March 2026</dd></div>
-                <div><dt>Passengers</dt><dd>4 Adults</dd></div>
-                <div><dt>Budget</dt><dd>Flexible</dd></div>
-              </dl>
-              <a href="dashboard/client/tour-request/new/?title=Mediterranean%20Cruise&tourType=Cruise%20Holiday&destination=Mediterranean&departureAirport=Any%20London%20airport&dateFrom=2026-03-01&dateTo=2026-03-14&adults=4&children=0&budget=Flexible&description=Seasonal%20Mediterranean%20cruise%20request%20for%204%20adults%20travelling%20in%20March%202026.%20Customer%20is%20open%20to%20flexible%20budget%20options.">View &amp; Request Quote</a>
-            </div>
-          </article>
-          <article class="request-card">
-            <img src="assets/trip-images/dubai-family-tour.png" alt="Family holiday in Dubai with the city skyline" />
-            <div>
-              <span class="badge">Luxury</span>
-              <h3>Dubai Family Tour</h3>
-              <dl>
-                <div><dt>Travel Date</dt><dd>April 2026</dd></div>
-                <div><dt>Passengers</dt><dd>2 Adults, 2 Children</dd></div>
-                <div><dt>Budget</dt><dd>&pound;15,000</dd></div>
-              </dl>
-              <a href="dashboard/client/tour-request/new/?title=Dubai%20Family%20Tour&tourType=Luxury%20Holiday&destination=Dubai%2C%20UAE&departureAirport=Manchester%20%28MAN%29&dateFrom=2026-04-01&dateTo=2026-04-14&adults=2&children=2&childAges=8%2C12&budget=%C2%A315%2C000&description=Dubai%20family%20tour%20for%202%20adults%20and%202%20children%20aged%208%20and%2012%20travelling%20in%20April%202026.%20Looking%20for%20family-friendly%20accommodation%2C%20transfers%2C%20and%20key%20Dubai%20experiences.">View &amp; Request Quote</a>
-            </div>
-          </article>
-          <article class="request-card">
-            <img src="assets/trip-images/norway-fjords-cruise.png" alt="Cruise ship travelling through Norway fjords" />
-            <div>
-              <span class="badge">Cruise</span>
-              <h3>Norway Fjords Cruise</h3>
-              <dl>
-                <div><dt>Travel Date</dt><dd>June 2026</dd></div>
-                <div><dt>Passengers</dt><dd>6 Adults</dd></div>
-                <div><dt>Budget</dt><dd>&pound;22,500</dd></div>
-              </dl>
-              <a href="dashboard/client/tour-request/new/?title=Norway%20Fjords%20Cruise&tourType=Cruise%20Holiday&destination=Norway%20Fjords&departureAirport=London%20Gatwick%20%28LGW%29&dateFrom=2026-06-01&dateTo=2026-06-14&adults=6&children=0&budget=%C2%A322%2C500&description=Norway%20fjords%20cruise%20request%20for%206%20adults%20travelling%20in%20June%202026.%20Interested%20in%20scenic%20fjord%20routes%2C%20premium%20cabins%2C%20and%20shore%20excursions.">View &amp; Request Quote</a>
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <section class="split-section">
-        <div class="image-stack">
-          <img class="main-image" src="prototype-request.png" alt="Travel request form preview" />
-          <div class="mini-card">
-            <strong>Travel Agents</strong>
-            <span>Verified bids ready within hours</span>
-          </div>
-        </div>
-        <div class="copy-column">
-          <div class="toggle-tabs" aria-label="Audience">
-            <button class="active" type="button">For Travellers</button>
-            <button type="button">For Agents</button>
-          </div>
-          <h2>A Smarter Way to <strong>Book Travel</strong></h2>
-          <p>Submit detailed travel requests, receive up to 5 verified agent bids, compare offers transparently, and choose one agent to handle the full booking.</p>
-          <ul class="check-list">
-            <li>Submit detailed trip requests</li>
-            <li>Receive up to 5 verified agent bids</li>
-            <li>Compare offers transparently</li>
-            <li>One agent handles full booking</li>
-          </ul>
-          <a class="text-link" href="dashboard/client/tour-request/new/">Submit Your Trip Request</a>
-        </div>
-      </section>
-
-      <section class="how-it-works" id="how-it-works">
-        <h2>How It <strong>Works</strong></h2>
-        <div class="steps">
-          <article>
-            <span class="step-icon step-submit"></span>
-            <h3>Submit Request</h3>
-            <p>Fill in your trip details and preferences.</p>
-          </article>
-          <article>
-            <span class="step-icon step-bids"></span>
-            <h3>Agent Bids</h3>
-            <p>Verified agents use credits to submit competitive offers.</p>
-          </article>
-          <article>
-            <span class="step-icon step-book"></span>
-            <h3>Choose &amp; Book</h3>
-            <p>Select the best agent and complete your booking directly.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="why-section">
-        <h2>Why Travellers <strong>Use Our Platform</strong></h2>
-        <div class="benefit-grid">
-          <article><h3>Better Prices</h3><p>Compare multiple travel quotes easily.</p></article>
-          <article><h3>Verified Agents</h3><p>All agents are reviewed and approved.</p></article>
-          <article><h3>Save Time</h3><p>No need to contact multiple agencies.</p></article>
-          <article><h3>Transparent Process</h3><p>Clear bidding and booking workflow.</p></article>
-        </div>
-      </section>
-
-      <section class="agent-section" id="agents">
-        <div>
-          <span class="section-kicker">Agent</span>
-          <h2>Become a <strong>Travel Agent Partner</strong></h2>
-          <p>Join as an agent, choose a tier and start bidding with credits on approved customer travel requests.</p>
-          <div class="agent-actions">
-            <a class="pill-button" href="dashboard/client/tour-request/new/">Request a Trip</a>
-            <a class="outline-button" href="#agents">Join as Agent</a>
-          </div>
-        </div>
-        <img src="assets/trip-images/dubai-family-tour.png" alt="Travel agent helping a family plan a Dubai holiday" />
-      </section>
-    </main>
-
-    <footer class="site-footer">
-      <div>
-        <a class="brand footer-brand" href="./" aria-label="Home">
+  <body class="login-page">
+    <main class="login-shell">
+      <section class="login-hero">
+        <a class="brand" href="./" aria-label="Home">
           <span class="brand-plane"></span>
         </a>
-        <p>Research prototype.</p>
-      </div>
-      <div class="footer-links">
-        <a href="#home">For Customers</a>
-        <a href="#agents">Pricing &amp; Membership</a>
-        <a href="#how-it-works">Agent Verification</a>
-        <a href="dashboard/client/tour-request/new/">Submit Travel Request</a>
-      </div>
-    </footer>
+        <div>
+          <p class="dashboard-eyebrow">Client access</p>
+          <h1>Sign in to view holiday quotes</h1>
+          <p>Use one of the seven demo client accounts below. Each account has its own quote requests and agent quote mix.</p>
+        </div>
+      </section>
+
+      <section class="login-card">
+        <form id="loginForm" class="login-form" data-dashboard-path="dashboard/client/">
+          <h2>Client Login</h2>
+          <label class="field">
+            <span>Email</span>
+            <input name="email" type="email" autocomplete="email" />
+          </label>
+          <label class="field">
+            <span>Password</span>
+            <input name="password" type="password" autocomplete="current-password" />
+          </label>
+          <small data-login-error></small>
+          <button class="submit-button" type="submit">View Dashboard</button>
+        </form>
+
+        <div class="demo-client-panel">
+          <div>
+            <strong>Demo clients</strong>
+            <span>Password for all: 12345</span>
+          </div>
+          <div class="demo-client-list" id="demoClientList"></div>
+        </div>
+      </section>
+    </main>
 
     <script src="assets/app.js"></script>
   </body>
