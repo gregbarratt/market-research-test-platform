@@ -377,6 +377,8 @@
     }
 
     if (action === "retrieve-pdf") {
+      event.preventDefault();
+      event.stopPropagation();
       const request = getDashboardRequests().find((item) => item.id === requestId);
       const quote = request && Array.isArray(request.agentQuotes)
         ? request.agentQuotes.find((item) => item.agent === agent)
@@ -438,15 +440,21 @@
     const filename = `${slugify(request.id)}-${slugify(quote.agent)}-quote.pdf`;
     const pdf = buildSmartQuotePdf(request, quote);
     const blob = new Blob([pdf], { type: "application/pdf" });
-    const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
+
+    const opened = window.open(url, "_blank", "noopener");
+    const link = document.createElement("a");
     link.href = url;
     link.download = filename;
-    link.target = "_blank";
-    link.rel = "noopener";
+    link.style.display = "none";
     document.body.appendChild(link);
     link.click();
     link.remove();
+
+    if (!opened) {
+      window.location.href = url;
+    }
+
     window.setTimeout(() => URL.revokeObjectURL(url), 30000);
   }
 
