@@ -1103,6 +1103,116 @@ section h2 strong {
   font-weight: 800;
 }
 
+.login-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top right, rgba(40, 173, 255, 0.22), transparent 32%),
+    linear-gradient(140deg, #263092 0%, #2f3b9c 46%, #56a7e4 100%);
+}
+
+.login-shell {
+  width: min(1120px, calc(100% - 44px));
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr;
+  align-items: center;
+  gap: 46px;
+  margin: 0 auto;
+  padding: 56px 0;
+}
+
+.login-hero {
+  color: #ffffff;
+}
+
+.login-hero .brand {
+  margin-bottom: 52px;
+  color: #ffffff;
+}
+
+.login-hero h1 {
+  margin: 10px 0 16px;
+  font-size: clamp(42px, 5vw, 68px);
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+.login-hero p:not(.dashboard-eyebrow) {
+  max-width: 520px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 18px;
+  line-height: 1.7;
+}
+
+.login-card {
+  display: grid;
+  gap: 18px;
+}
+
+.login-form,
+.demo-client-panel {
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 24px 60px rgba(10, 20, 70, 0.22);
+}
+
+.login-form {
+  display: grid;
+  gap: 16px;
+  padding: 30px;
+}
+
+.login-form h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.login-form small {
+  min-height: 18px;
+  color: #ef4444;
+  font-weight: 800;
+}
+
+.demo-client-panel {
+  padding: 24px;
+}
+
+.demo-client-panel strong,
+.demo-client-panel span {
+  display: block;
+}
+
+.demo-client-panel span {
+  margin-top: 3px;
+  color: var(--qmt-text-muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.demo-client-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.demo-client-list button {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--qmt-border);
+  border-radius: 13px;
+  background: #f8fbff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.demo-client-list button:hover {
+  border-color: rgba(20, 118, 255, 0.34);
+  background: var(--qmt-blue-light);
+}
+
 .dashboard-page {
   background:
     radial-gradient(circle at top right, rgba(214, 181, 109, 0.16), transparent 28%),
@@ -1287,6 +1397,18 @@ section h2 strong {
   font-size: 13px;
   font-weight: 800;
   background: #ffffff;
+}
+
+.logout-button {
+  min-height: 36px;
+  padding: 0 15px;
+  border: 1px solid var(--qmt-border);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--qmt-text-dark);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 .avatar {
@@ -2285,7 +2407,21 @@ section h2 strong {
   .benefit-grid,
   .split-section,
   .agent-section,
+  .login-shell,
   .qmt-form {
+    grid-template-columns: 1fr;
+  }
+
+  .login-shell {
+    align-items: start;
+    padding: 28px 0;
+  }
+
+  .login-hero .brand {
+    margin-bottom: 34px;
+  }
+
+  .demo-client-list {
     grid-template-columns: 1fr;
   }
 

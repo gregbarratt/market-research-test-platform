@@ -6,7 +6,7 @@
     <title>Request a New Tour</title>
     <link rel="stylesheet" href="../../../../assets/styles.css" />
   </head>
-  <body class="dashboard-page">
+  <body class="dashboard-page" data-require-auth="true" data-login-path="../../../../login/">
     <div class="dashboard-shell">
       <aside class="sidebar">
         <div class="sidebar-logo">
@@ -28,11 +28,12 @@
         <header class="dashboard-topbar">
           <button class="menu-button" type="button" aria-label="Open menu"><span></span></button>
           <div>
-            <p>Client Dashboard</p>
-            <strong>Tour Request</strong>
+            <p data-client-email>Client Dashboard</p>
+            <strong data-client-name>Tour Request</strong>
           </div>
           <div class="topbar-actions">
             <a class="home-link" href="../../../../">Main Website</a>
+            <button class="logout-button" id="logoutButton" type="button" data-login-path="../../../../login/">Log out</button>
             <span class="avatar">GB</span>
           </div>
         </header>

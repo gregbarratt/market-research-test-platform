@@ -1,4 +1,29 @@
 (function () {
+  const AUTH_KEY = "qmtCurrentClient";
+  const DEMO_PASSWORD = "12345";
+  const DEMO_CLIENTS = [
+    { name: "Person Client", email: "person@mail.com", initials: "PC" },
+    { name: "Sarah Mitchell", email: "sarah@mail.com", initials: "SM" },
+    { name: "David Hughes", email: "david@mail.com", initials: "DH" },
+    { name: "Emma Wilson", email: "emma@mail.com", initials: "EW" },
+    { name: "James Patel", email: "james@mail.com", initials: "JP" },
+    { name: "Aisha Khan", email: "aisha@mail.com", initials: "AK" },
+    { name: "Michael Brown", email: "michael@mail.com", initials: "MB" }
+  ];
+
+  const loginForm = document.getElementById("loginForm");
+  if (loginForm) setupLoginForm(loginForm);
+
+  const currentClient = getCurrentClient();
+  if (document.body.dataset.requireAuth === "true" && !currentClient) {
+    const loginUrl = new URL(document.body.dataset.loginPath || "/login/", window.location.href);
+    loginUrl.searchParams.set("return", window.location.href);
+    window.location.href = loginUrl.toString();
+    return;
+  }
+
+  updateClientShell(currentClient);
+
   const heroSearch = document.getElementById("heroSearch");
   if (heroSearch) {
     heroSearch.addEventListener("submit", (event) => {
@@ -15,7 +40,7 @@
   const quoteRequestsList = document.getElementById("quoteRequestsList");
   const expandedQuoteRequests = new Set();
   if (quoteRequestsList) {
-    const firstQuotedRequest = mergeQuoteRequests(loadQuoteRequests(), getDemoQuoteRequests())
+    const firstQuotedRequest = getDashboardRequests()
       .find((request) => Array.isArray(request.agentQuotes) && request.agentQuotes.length);
     if (firstQuotedRequest) expandedQuoteRequests.add(firstQuotedRequest.id);
     quoteRequestsList.addEventListener("click", handleDashboardClick);
@@ -166,6 +191,7 @@
       quotesReceived: 0,
       maxQuotes: 5,
       agentQuotes: [],
+      clientEmail: (getCurrentClient()?.email || "person@mail.com").toLowerCase(),
       title: data.title.trim(),
       tourType: data.tourType,
       destination: data.destination.trim(),
@@ -182,11 +208,11 @@
 
     const requests = loadQuoteRequests();
     requests.unshift(request);
-    localStorage.setItem("qmtQuoteRequests", JSON.stringify(requests));
+    localStorage.setItem(getClientStorageKey("qmtQuoteRequests"), JSON.stringify(requests));
   }
 
   function renderDashboardRequests() {
-    const requests = mergeQuoteRequests(loadQuoteRequests(), getDemoQuoteRequests());
+    const requests = getDashboardRequests();
     const total = document.getElementById("statTotal");
     const pending = document.getElementById("statPending");
 
@@ -351,7 +377,7 @@
     }
 
     if (action === "retrieve-pdf") {
-      const request = mergeQuoteRequests(loadQuoteRequests(), getDemoQuoteRequests()).find((item) => item.id === requestId);
+      const request = getDashboardRequests().find((item) => item.id === requestId);
       const quote = request && Array.isArray(request.agentQuotes)
         ? request.agentQuotes.find((item) => item.agent === agent)
         : null;
@@ -361,14 +387,14 @@
 
   function loadQuoteDecisions() {
     try {
-      return JSON.parse(localStorage.getItem("qmtQuoteDecisions") || "{}");
+      return JSON.parse(localStorage.getItem(getClientStorageKey("qmtQuoteDecisions")) || "{}");
     } catch {
       return {};
     }
   }
 
   function saveQuoteDecisions(decisions) {
-    localStorage.setItem("qmtQuoteDecisions", JSON.stringify(decisions));
+    localStorage.setItem(getClientStorageKey("qmtQuoteDecisions"), JSON.stringify(decisions));
   }
 
   function getQuoteDecision(decisions, requestId, agent) {
@@ -450,6 +476,7 @@
   function escapePdfText(value) {
     return String(value ?? "")
       .replaceAll("£", "GBP ")
+      .replaceAll("\u00a3", "GBP ")
       .replace(/[^\x20-\x7e]/g, "")
       .replaceAll("\\", "\\\\")
       .replaceAll("(", "\\(")
@@ -461,6 +488,95 @@
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "") || "quote";
+  }
+
+  function setupLoginForm(formNode) {
+    const demoList = document.getElementById("demoClientList");
+    const errorNode = document.querySelector("[data-login-error]");
+    const signedInClient = getCurrentClient();
+
+    if (demoList) {
+      demoList.innerHTML = DEMO_CLIENTS.map((client) => `
+        <button type="button" data-demo-email="${escapeHtml(client.email)}">
+          <strong>${escapeHtml(client.name)}</strong>
+          <span>${escapeHtml(client.email)}</span>
+        </button>
+      `).join("");
+
+      demoList.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-demo-email]");
+        if (!button) return;
+        formNode.elements.email.value = button.dataset.demoEmail;
+        formNode.elements.password.value = DEMO_PASSWORD;
+      });
+    }
+
+    if (signedInClient) {
+      formNode.elements.email.value = signedInClient.email;
+      formNode.elements.password.value = DEMO_PASSWORD;
+    } else {
+      formNode.elements.email.value = "person@mail.com";
+      formNode.elements.password.value = DEMO_PASSWORD;
+    }
+
+    formNode.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const email = formNode.elements.email.value.trim().toLowerCase();
+      const password = formNode.elements.password.value.trim();
+      const client = DEMO_CLIENTS.find((item) => item.email === email);
+
+      if (!client || password !== DEMO_PASSWORD) {
+        if (errorNode) errorNode.textContent = "Use one of the demo client emails and password 12345.";
+        return;
+      }
+
+      localStorage.setItem(AUTH_KEY, JSON.stringify(client));
+      const returnUrl = new URLSearchParams(window.location.search).get("return");
+      if (returnUrl && returnUrl.startsWith(window.location.origin)) {
+        window.location.href = returnUrl;
+      } else {
+        window.location.href = "../dashboard/client/";
+      }
+    });
+  }
+
+  function updateClientShell(client) {
+    document.querySelectorAll("[data-client-name]").forEach((node) => {
+      node.textContent = client?.name || "Client Dashboard";
+    });
+    document.querySelectorAll("[data-client-email]").forEach((node) => {
+      node.textContent = client?.email || "";
+    });
+    document.querySelectorAll(".avatar").forEach((node) => {
+      node.textContent = client?.initials || "GB";
+    });
+
+    const logoutButton = document.getElementById("logoutButton");
+    if (logoutButton) {
+      logoutButton.addEventListener("click", () => {
+        localStorage.removeItem(AUTH_KEY);
+        window.location.href = logoutButton.dataset.loginPath || "../../login/";
+      });
+    }
+  }
+
+  function getCurrentClient() {
+    try {
+      const stored = JSON.parse(localStorage.getItem(AUTH_KEY) || "null");
+      if (!stored?.email) return null;
+      return DEMO_CLIENTS.find((client) => client.email === stored.email.toLowerCase()) || null;
+    } catch {
+      return null;
+    }
+  }
+
+  function getClientStorageKey(baseKey) {
+    const email = getCurrentClient()?.email || "person@mail.com";
+    return `${baseKey}:${email}`;
+  }
+
+  function getDashboardRequests() {
+    return mergeQuoteRequests(loadQuoteRequests(), getDemoQuoteRequests());
   }
 
   function getDemoQuoteRequests() {
@@ -569,6 +685,114 @@
     });
   }
 
+  function getDemoQuoteRequests() {
+    const email = getCurrentClient()?.email || "person@mail.com";
+    const scenarios = {
+      "person@mail.com": [
+        ["PER-101", "Mediterranean Cruise", "Cruise", "Barcelona, Rome & Greek Islands", "London Gatwick (LGW)", "2026-06-05", "2026-06-15", "4", "0", [], 22500, "Balcony cabin preferred with excursions included.", "", 5, "cruise"],
+        ["PER-102", "Tenerife Half-Term Sun", "Package Holiday", "Costa Adeje, Tenerife", "Birmingham (BHX)", "2026-10-24", "2026-10-31", "2", "2", ["7", "11"], 3800, "Family hotel with pool, close to beach.", "https://www.jet2holidays.com/", 2, "family"],
+        ["PER-103", "New York City Break", "City Break", "New York, USA", "Manchester (MAN)", "2026-12-04", "2026-12-09", "2", "0", [], 4500, "Central hotel, direct flights preferred.", "", 2, "city"],
+        ["PER-104", "Lapland Christmas Escape", "Custom Travel", "Rovaniemi, Finland", "London Stansted (STN)", "2026-12-20", "2026-12-24", "2", "1", ["6"], 5200, "Santa visit, snow activities and family lodge.", "", 0, "snow"]
+      ],
+      "sarah@mail.com": [
+        ["SAR-201", "Maldives Luxury Escape", "Luxury Holiday", "Baa Atoll, Maldives", "London Heathrow (LHR)", "2026-09-10", "2026-09-20", "2", "0", [], 9800, "Water villa, seaplane transfers and premium dining.", "", 5, "luxury"],
+        ["SAR-202", "Greece Island Hop", "Beach Holiday", "Santorini & Naxos, Greece", "Bristol (BRS)", "2026-07-03", "2026-07-12", "2", "1", ["9"], 4200, "Boutique hotels and ferry transfers.", "", 2, "beach"],
+        ["SAR-203", "Paris Disney Break", "Disney Trip", "Paris, France", "London St Pancras", "2026-08-17", "2026-08-21", "2", "2", ["5", "8"], 3200, "Disney hotel with park tickets included.", "", 2, "family"],
+        ["SAR-204", "Dubai Shopping Weekend", "Luxury Holiday", "Dubai, UAE", "Manchester (MAN)", "2026-11-12", "2026-11-16", "2", "0", [], 3600, "Five-star hotel near Dubai Mall.", "", 0, "luxury"]
+      ],
+      "david@mail.com": [
+        ["DAV-301", "Norway Fjords Cruise", "Cruise Holiday", "Norway Fjords", "Southampton", "2026-06-22", "2026-07-01", "2", "0", [], 6400, "Scenic fjord itinerary with balcony cabin.", "", 5, "cruise"],
+        ["DAV-302", "Turkey All Inclusive", "Package Holiday", "Antalya, Turkey", "Glasgow (GLA)", "2026-05-18", "2026-05-25", "2", "2", ["10", "13"], 3100, "All inclusive resort with water slides.", "https://www.tui.co.uk/", 2, "family"],
+        ["DAV-303", "Iceland Northern Lights", "Adventure Holiday", "Reykjavik, Iceland", "Edinburgh (EDI)", "2026-02-06", "2026-02-10", "2", "0", [], 2900, "Northern lights tour and lagoon visit.", "", 2, "snow"],
+        ["DAV-304", "Rome Cultural Weekend", "Cultural Holiday", "Rome, Italy", "London City (LCY)", "2026-04-23", "2026-04-27", "2", "0", [], 2100, "Central hotel and guided Vatican tour.", "", 0, "city"]
+      ],
+      "emma@mail.com": [
+        ["EMM-401", "Mauritius Paradise", "Luxury Holiday", "Belle Mare, Mauritius", "London Gatwick (LGW)", "2026-09-02", "2026-09-12", "2", "0", [], 7900, "Beachfront resort with half board.", "", 5, "luxury"],
+        ["EMM-402", "Barcelona City & Beach", "Multi-Centre Trip", "Barcelona, Spain", "Manchester (MAN)", "2026-06-11", "2026-06-18", "2", "0", [], 2600, "City hotel, beach time and tapas tour.", "", 2, "city"],
+        ["EMM-403", "Florida Theme Parks", "Package Holiday", "Orlando, USA", "London Heathrow (LHR)", "2026-08-01", "2026-08-15", "2", "2", ["6", "12"], 9200, "Villa or family hotel with park tickets.", "", 2, "family"],
+        ["EMM-404", "Malta Family Break", "Beach Holiday", "St Julian's, Malta", "Birmingham (BHX)", "2026-05-26", "2026-06-02", "2", "1", ["4"], 2400, "Short-haul beach break with family room.", "", 0, "beach"]
+      ],
+      "james@mail.com": [
+        ["JAM-501", "Thailand Adventure", "Adventure Holiday", "Bangkok, Chiang Mai & Phuket", "London Heathrow (LHR)", "2026-11-01", "2026-11-14", "2", "0", [], 6200, "Temples, beach stay and guided experiences.", "", 5, "adventure"],
+        ["JAM-502", "Caribbean Cruise", "Cruise Holiday", "Barbados & Caribbean Islands", "Manchester (MAN)", "2026-03-08", "2026-03-18", "2", "0", [], 7200, "Fly-cruise with drinks package.", "", 2, "cruise"],
+        ["JAM-503", "Amsterdam City Break", "City Break", "Amsterdam, Netherlands", "Leeds Bradford (LBA)", "2026-05-01", "2026-05-04", "2", "0", [], 1450, "Canal district hotel and museum passes.", "", 2, "city"],
+        ["JAM-504", "Canary Islands Winter Sun", "Beach Holiday", "Lanzarote, Canary Islands", "Newcastle (NCL)", "2026-01-20", "2026-01-27", "2", "0", [], 2600, "Quiet resort with heated pool.", "", 0, "beach"]
+      ],
+      "aisha@mail.com": [
+        ["AIS-601", "Dubai Family Tour", "Luxury Holiday", "Dubai, UAE", "Manchester (MAN)", "2026-04-01", "2026-04-14", "2", "2", ["8", "12"], 15000, "Family-friendly luxury hotel and Dubai experiences.", "", 5, "luxury"],
+        ["AIS-602", "Morocco Riad Escape", "Cultural Holiday", "Marrakech, Morocco", "London Gatwick (LGW)", "2026-10-05", "2026-10-10", "2", "0", [], 2800, "Riad stay, souk tour and desert dinner.", "", 2, "adventure"],
+        ["AIS-603", "Swiss Ski Week", "Ski Holiday", "Zermatt, Switzerland", "London Heathrow (LHR)", "2026-02-14", "2026-02-21", "2", "1", ["14"], 6800, "Ski passes, equipment and central chalet.", "", 2, "snow"],
+        ["AIS-604", "Bali Honeymoon", "Luxury Holiday", "Ubud & Seminyak, Bali", "London Heathrow (LHR)", "2026-09-21", "2026-10-02", "2", "0", [], 7400, "Private pool villa and wellness experiences.", "", 0, "luxury"]
+      ],
+      "michael@mail.com": [
+        ["MIC-701", "Princess Mediterranean Cruise", "Cruise Holiday", "Italy, Greece & Croatia", "Southampton", "2026-07-18", "2026-07-29", "2", "0", [], 8800, "Premium cruise fare with balcony cabin.", "", 5, "cruise"],
+        ["MIC-702", "Portugal Golf Break", "Package Holiday", "Vilamoura, Portugal", "Birmingham (BHX)", "2026-05-09", "2026-05-16", "4", "0", [], 5600, "Golf resort, tee times and transfers.", "", 2, "beach"],
+        ["MIC-703", "New York Theatre Trip", "City Break", "New York, USA", "London Heathrow (LHR)", "2026-12-10", "2026-12-15", "2", "0", [], 5200, "Broadway tickets and central hotel.", "", 2, "city"],
+        ["MIC-704", "Egypt Nile Adventure", "Adventure Holiday", "Cairo & Nile Cruise, Egypt", "Manchester (MAN)", "2026-03-16", "2026-03-25", "2", "0", [], 4900, "Guided sites, Nile cruise and private transfers.", "", 0, "adventure"]
+      ]
+    };
+
+    return (scenarios[email] || scenarios["person@mail.com"]).map(createDemoRequest);
+  }
+
+  function createDemoRequest(data) {
+    const [code, title, tourType, destination, departureAirport, dateFrom, dateTo, adults, children, childAges, budget, description, bookingLink, quotesReceived, quoteTheme] = data;
+    return {
+      id: `QMT-${code}`,
+      createdAt: getDemoDate(code),
+      status: quotesReceived ? `${quotesReceived} of 5 agents quoted` : "Brand new request",
+      quotesReceived,
+      maxQuotes: 5,
+      title,
+      tourType,
+      destination,
+      departureAirport,
+      dateFrom,
+      dateTo,
+      adults,
+      children,
+      childAges,
+      budget: formatPounds(budget),
+      description,
+      bookingLink,
+      agentQuotes: buildAgentQuotes(quoteTheme, quotesReceived, budget)
+    };
+  }
+
+  function buildAgentQuotes(theme, count, budget) {
+    const notes = {
+      cruise: ["Balcony cabin, drinks package", "Flights and transfers included", "Best value, full board", "Premium cabin upgrade", "Excursion credit included"],
+      family: ["Family room and kids club", "Transfers and checked bags", "Half board family hotel", "Water park access", "Flexible family payment"],
+      city: ["Central hotel, breakfast", "Direct flights included", "Best value city location", "Premium room upgrade", "Event ticket support"],
+      beach: ["Beachfront hotel", "All-inclusive option", "Sea-view room", "Airport transfers", "Low deposit available"],
+      luxury: ["Five-star hotel", "Private transfers", "Premium dining plan", "Room upgrade included", "Concierge support"],
+      adventure: ["Guided experiences", "Private transfers", "Flexible itinerary", "Excursions included", "Local specialist support"],
+      snow: ["Resort transfers", "Activity passes", "Warm family lodge", "Equipment support", "Flexible winter package"]
+    };
+    const agents = ["Ocean Blue Travel", "Harbour Holidays", "CruiseLine Experts", "Atlas Travel Co", "Voyage Desk"];
+    const ratings = ["4.9", "4.7", "4.8", "4.6", "4.5"];
+    const reviews = ["312 reviews", "188 reviews", "241 reviews", "96 reviews", "74 reviews"];
+    const selectedNotes = notes[theme] || notes.luxury;
+
+    return agents.slice(0, count).map((agent, index) => ({
+      agent,
+      price: formatPounds(Math.max(950, budget - 560 + (index * 210))),
+      rating: ratings[index],
+      reviews: reviews[index],
+      note: selectedNotes[index],
+      inclusions: [selectedNotes[index], "PDF quote available", index % 2 ? "ATOL protected" : "Verified agent support"]
+    }));
+  }
+
+  function getDemoDate(code) {
+    const offset = Number(String(code).replace(/\D/g, "").slice(-1)) || 1;
+    return new Date(Date.UTC(2026, 4, 29 - offset, 9 + offset, 20, 0)).toISOString();
+  }
+
+  function formatPounds(value) {
+    return `\u00a3${Number(value).toLocaleString("en-GB")}`;
+  }
+
   function getQuoteState(request) {
     const max = Math.max(1, Number(request.maxQuotes) || 5);
     const received = Math.min(max, Math.max(0, Number(request.quotesReceived ?? (request.agentQuotes || []).length) || 0));
@@ -587,6 +811,8 @@
 
   function loadQuoteRequests() {
     try {
+      const currentRequests = JSON.parse(localStorage.getItem(getClientStorageKey("qmtQuoteRequests")) || "[]");
+      if (currentRequests.length || getCurrentClient()?.email !== "person@mail.com") return currentRequests;
       return JSON.parse(localStorage.getItem("qmtQuoteRequests") || "[]");
     } catch {
       return [];
