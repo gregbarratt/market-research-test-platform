@@ -418,44 +418,615 @@
   }
 
   function downloadQuotePdf(request, quote) {
-    const lines = [
-      "Agent Quote PDF",
-      `Request: ${request.id}`,
-      `Holiday: ${request.title}`,
-      `Destination: ${request.destination}`,
-      `Agent: ${quote.agent}`,
-      `Rating: ${quote.rating || "4.7"} out of 5`,
-      `Price: ${quote.price}`,
-      `Summary: ${quote.note}`,
-      `Dates: ${formatDate(request.dateFrom)} - ${formatDate(request.dateTo)}`,
-      `Passengers: ${request.adults} adults, ${request.children || 0} children`,
-      `Budget: ${request.budget}`,
-      "",
-      "This is a prototype PDF quote for market research testing."
-    ];
-    const pdf = buildSimplePdf(lines);
+    const filename = `${slugify(request.id)}-${slugify(quote.agent)}-quote.pdf`;
+    const pdf = buildSmartQuotePdf(request, quote);
     const blob = new Blob([pdf], { type: "application/pdf" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `${slugify(request.id)}-${slugify(quote.agent)}-quote.pdf`;
+    link.download = filename;
     document.body.appendChild(link);
     link.click();
     link.remove();
     window.setTimeout(() => URL.revokeObjectURL(link.href), 500);
   }
 
-  function buildSimplePdf(lines) {
-    const contentLines = ["BT", "/F1 18 Tf", "50 760 Td", `(${escapePdfText(lines[0])}) Tj`, "/F1 11 Tf"];
-    lines.slice(1).forEach((line) => {
-      contentLines.push("0 -20 Td", `(${escapePdfText(line)}) Tj`);
+  function ensureHtml2Pdf() {
+    if (window.html2pdf) return Promise.resolve();
+    if (window.__qmtHtml2PdfLoading) return window.__qmtHtml2PdfLoading;
+
+    window.__qmtHtml2PdfLoading = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error("html2pdf could not be loaded"));
+      document.head.appendChild(script);
     });
-    contentLines.push("ET");
-    const stream = contentLines.join("\n");
+
+    return window.__qmtHtml2PdfLoading;
+  }
+
+  function buildSmartQuotePdfElement(request, quote) {
+    const dates = `${formatDate(request.dateFrom)} - ${formatDate(request.dateTo)}`;
+    const childCount = Number(request.children) || 0;
+    const passengers = `${request.adults} adults${childCount ? `, ${childCount} children` : ""}`;
+    const inclusions = Array.isArray(quote.inclusions) && quote.inclusions.length
+      ? quote.inclusions
+      : [quote.note, "PDF quote available", "Subject to live availability"];
+    const price = normalisePound(quote.price);
+    const perPerson = normalisePound(getPerPersonPrice(quote.price, request.adults, request.children));
+    const image = getQuoteImage(request);
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "smart-quote-export-wrap";
+    wrapper.style.cssText = "position:fixed;left:0;top:0;width:794px;background:#eaf4fb;pointer-events:none;z-index:2147483647;";
+    wrapper.innerHTML = `
+      <style>
+        .smart-quote-export-page,
+        .smart-quote-export-page * {
+          box-sizing: border-box;
+          break-inside: avoid;
+          page-break-inside: avoid;
+        }
+
+        .smart-quote-export-page {
+          width: 794px;
+          min-height: 1123px;
+          padding: 22px 28px 24px;
+          background: #eaf4fb;
+          color: #15213a;
+          font-family: Inter, Arial, sans-serif;
+          font-size: 13px;
+        }
+
+        .sq-header {
+          text-align: center;
+          margin-bottom: 14px;
+        }
+
+        .sq-logo {
+          color: #173f7a;
+          font-size: 24px;
+          font-weight: 900;
+          letter-spacing: 1px;
+        }
+
+        .sq-updated {
+          margin-top: 4px;
+          color: #64708a;
+          font-size: 11px;
+        }
+
+        .sq-banner {
+          height: 134px;
+          display: flex;
+          align-items: flex-end;
+          padding: 18px;
+          border-radius: 16px;
+          background: linear-gradient(180deg, rgba(8, 20, 40, 0.05), rgba(8, 20, 40, 0.68)), url("${escapeHtml(image)}") center / cover;
+          color: #ffffff;
+          overflow: hidden;
+        }
+
+        .sq-banner h1 {
+          margin: 0;
+          font-size: 28px;
+          line-height: 1.1;
+        }
+
+        .sq-banner p {
+          margin: 7px 0 0;
+          color: rgba(255, 255, 255, 0.84);
+          font-size: 13px;
+        }
+
+        .sq-summary {
+          display: grid;
+          grid-template-columns: 185px 1fr;
+          gap: 14px;
+          margin-top: 14px;
+        }
+
+        .sq-price-card,
+        .sq-agent-card,
+        .sq-section,
+        .sq-flight-card,
+        .sq-action-panel {
+          border: 1px solid #d7e2f0;
+          border-radius: 14px;
+          background: #ffffff;
+          box-shadow: 0 10px 24px rgba(16, 41, 84, 0.08);
+        }
+
+        .sq-price-card {
+          display: flex;
+          min-height: 118px;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          background: #143f78;
+          color: #ffffff;
+          text-align: center;
+        }
+
+        .sq-price-card span,
+        .sq-price-card em {
+          font-size: 12px;
+          font-style: normal;
+          opacity: 0.9;
+        }
+
+        .sq-price-card strong {
+          display: block;
+          margin: 7px 0;
+          font-size: 30px;
+        }
+
+        .sq-agent-card {
+          display: grid;
+          grid-template-columns: 86px 1fr 128px;
+          gap: 16px;
+          align-items: center;
+          min-height: 118px;
+          padding: 16px;
+        }
+
+        .sq-avatar {
+          width: 74px;
+          height: 74px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          background: #eaf4ff;
+          color: #1476ff;
+          font-size: 24px;
+          font-weight: 900;
+        }
+
+        .sq-agent-card h2 {
+          margin: 0 0 4px;
+          font-size: 22px;
+        }
+
+        .sq-muted {
+          color: #64708a;
+        }
+
+        .sq-rating {
+          display: none;
+          margin-top: 7px;
+          color: #8a5a00;
+          font-weight: 900;
+        }
+
+        .sq-rating-clean {
+          margin-top: 7px;
+          color: #8a5a00;
+          font-weight: 900;
+        }
+
+        .sq-trust-stack {
+          display: grid;
+          gap: 7px;
+          justify-items: end;
+        }
+
+        .sq-status-pill {
+          display: inline-flex;
+          align-items: center;
+          min-height: 30px;
+          padding: 0 12px;
+          border-radius: 999px;
+          background: #e9f8ef;
+          color: #0c7040;
+          font-weight: 900;
+          white-space: nowrap;
+        }
+
+        .sq-trust-mark {
+          display: inline-flex;
+          min-height: 28px;
+          align-items: center;
+          justify-content: center;
+          padding: 0 10px;
+          border-radius: 999px;
+          background: #f4f8fe;
+          color: #143f78;
+          border: 1px solid #d7e2f0;
+          font-size: 11px;
+          font-weight: 900;
+        }
+
+        .sq-section {
+          margin-top: 14px;
+          padding: 16px;
+        }
+
+        .sq-section h3 {
+          margin: 0 0 12px;
+          color: #1476ff;
+          font-size: 18px;
+        }
+
+        .sq-detail-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 10px;
+        }
+
+        .sq-detail {
+          min-height: 55px;
+          padding: 10px 12px;
+          border-radius: 10px;
+          background: #f5f8fc;
+        }
+
+        .sq-detail span {
+          display: block;
+          color: #64708a;
+          font-size: 11px;
+          font-weight: 800;
+        }
+
+        .sq-detail strong {
+          display: block;
+          margin-top: 4px;
+          font-size: 14px;
+        }
+
+        .sq-holiday-copy {
+          margin: 0 0 10px;
+          color: #64708a;
+          line-height: 1.45;
+        }
+
+        .sq-inclusions {
+          margin: 0;
+          padding: 0;
+          list-style: none;
+        }
+
+        .sq-inclusions li {
+          margin: 6px 0;
+          font-weight: 800;
+        }
+
+        .sq-inclusions li::before {
+          content: "";
+          width: 7px;
+          height: 7px;
+          display: inline-block;
+          margin-right: 8px;
+          border-radius: 50%;
+          background: #1476ff;
+          vertical-align: middle;
+        }
+
+        .sq-flight-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 12px;
+        }
+
+        .sq-flight-card {
+          padding: 14px;
+          box-shadow: none;
+        }
+
+        .sq-flight-card h4 {
+          margin: 0 0 9px;
+          font-size: 16px;
+        }
+
+        .sq-flight-row {
+          display: flex;
+          justify-content: space-between;
+          gap: 12px;
+          margin-top: 6px;
+          color: #64708a;
+        }
+
+        .sq-action-grid {
+          display: grid;
+          grid-template-columns: 1fr 210px;
+          gap: 14px;
+          align-items: stretch;
+          margin-top: 14px;
+        }
+
+        .sq-action-panel {
+          padding: 16px;
+        }
+
+        .sq-action-panel h3 {
+          margin: 0 0 8px;
+          color: #15213a;
+        }
+
+        .sq-action-buttons {
+          display: grid;
+          gap: 9px;
+          margin-top: 14px;
+        }
+
+        .sq-accept,
+        .sq-reject {
+          min-height: 38px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 999px;
+          font-weight: 900;
+        }
+
+        .sq-accept {
+          background: #0c7040;
+          color: #ffffff;
+        }
+
+        .sq-reject {
+          background: #fff1f1;
+          color: #bd2d2d;
+        }
+
+        .sq-footer {
+          margin-top: 16px;
+          padding: 12px 14px;
+          border-radius: 12px;
+          background: #143f78;
+          color: #ffffff;
+          text-align: center;
+          font-size: 12px;
+          font-weight: 800;
+        }
+
+        .sq-small-print {
+          margin: 8px 0 0;
+          color: #64708a;
+          font-size: 11px;
+          line-height: 1.35;
+        }
+      </style>
+      <div class="smart-quote-export-page">
+        <div class="sq-header">
+          <div class="sq-logo">${escapeHtml(quote.agent)}</div>
+          <div class="sq-updated">Agent company quote | Last Updated at: 27 May 2026, 07:55 PM</div>
+        </div>
+
+        <div class="sq-banner">
+          <div>
+            <h1>${escapeHtml(quote.agent)} Quote</h1>
+            <p>${escapeHtml(request.title)} | ${escapeHtml(request.id)}</p>
+          </div>
+        </div>
+
+        <div class="sq-summary">
+          <div class="sq-price-card">
+            <span>Total Price</span>
+            <strong>${escapeHtml(price)}</strong>
+            <em>Per Person: ${escapeHtml(perPerson)}</em>
+            <em>Deposit: ${escapeHtml(price)}</em>
+          </div>
+
+          <div class="sq-agent-card">
+            <div class="sq-avatar">${escapeHtml(getInitials(quote.agent))}</div>
+            <div>
+              <h2>${escapeHtml(quote.agent)}</h2>
+              <div class="sq-muted">Provided by: ${escapeHtml(quote.agent)}</div>
+              <div class="sq-rating-clean">&#9733;&#9733;&#9733;&#9733;&#9733; ${escapeHtml(quote.rating || "4.7")} | ${escapeHtml(quote.reviews || "Verified agent")}</div>
+              <div class="sq-rating">★★★★★ ${escapeHtml(quote.rating || "4.7")} | ${escapeHtml(quote.reviews || "Verified agent")}</div>
+            </div>
+            <div class="sq-trust-stack">
+              <div class="sq-status-pill">Quote ready</div>
+              <div class="sq-trust-mark">ATOL protected</div>
+              <div class="sq-trust-mark">ABTA / CTA</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sq-section">
+          <h3>Booking Details</h3>
+          <div class="sq-detail-grid">
+            ${quoteDetail("Holiday", request.title)}
+            ${quoteDetail("Destination", request.destination)}
+            ${quoteDetail("Travel Dates", dates)}
+            ${quoteDetail("Departure", request.departureAirport || "Departure airport TBC")}
+            ${quoteDetail("Passengers", passengers)}
+            ${quoteDetail("Budget", normalisePound(request.budget))}
+          </div>
+        </div>
+
+        <div class="sq-section">
+          <h3>Hotel / Holiday Information</h3>
+          <p class="sq-holiday-copy">${escapeHtml(quote.note)}</p>
+          <ul class="sq-inclusions">
+            ${inclusions.slice(0, 5).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+          </ul>
+        </div>
+
+        <div class="sq-section">
+          <h3>Flight Details</h3>
+          <div class="sq-flight-grid">
+            ${flightCard("Departure Flight", "Outbound", request.departureAirport || "UK airport", request.destination, formatDate(request.dateFrom))}
+            ${flightCard("Return Flight", "Inbound", request.destination, request.departureAirport || "UK airport", formatDate(request.dateTo))}
+          </div>
+        </div>
+
+        <div class="sq-action-grid">
+          <div class="sq-section" style="margin-top:0;">
+            <h3>Terms & Conditions</h3>
+            <p class="sq-holiday-copy">Customer accepts the agent terms and conditions, privacy policy and live availability checks before confirming the booking.</p>
+            <p class="sq-small-print">All prices are subject to live availability at the point of booking. This quote is prepared for market research testing and mirrors the Smart Quote customer journey.</p>
+          </div>
+          <div class="sq-action-panel">
+            <h3>Customer action</h3>
+            <div class="sq-muted">Review this quote, then accept or reject the agent offer.</div>
+            <div class="sq-action-buttons">
+              <div class="sq-accept">Accept Quote</div>
+              <div class="sq-reject">Reject Quote</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sq-footer">Company Name: ${escapeHtml(quote.agent)} &nbsp; | &nbsp; ATOL / ABTA / CTA approved &nbsp; | &nbsp; Smart Quote format</div>
+      </div>
+    `;
+
+    return wrapper;
+  }
+
+  function quoteDetail(label, value) {
+    return `<div class="sq-detail"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value || "TBC")}</strong></div>`;
+  }
+
+  function flightCard(title, type, from, to, date) {
+    return `
+      <div class="sq-flight-card">
+        <h4>${escapeHtml(title)}</h4>
+        <div class="sq-flight-row"><strong>Type</strong><span>${escapeHtml(type)}</span></div>
+        <div class="sq-flight-row"><strong>From</strong><span>${escapeHtml(from)}</span></div>
+        <div class="sq-flight-row"><strong>To</strong><span>${escapeHtml(to)}</span></div>
+        <div class="sq-flight-row"><strong>Date</strong><span>${escapeHtml(date)}</span></div>
+      </div>
+    `;
+  }
+
+  function buildSmartQuotePdf(request, quote) {
+    const pageWidth = 612;
+    const pageHeight = 792;
+    const ops = [];
+    const dates = `${formatDate(request.dateFrom)} - ${formatDate(request.dateTo)}`;
+    const childCount = Number(request.children) || 0;
+    const childAges = childCount && Array.isArray(request.childAges) && request.childAges.length
+      ? `, ages ${request.childAges.join(", ")}`
+      : "";
+    const passengers = `${request.adults} adults, ${childCount} children${childAges}`;
+    const inclusions = Array.isArray(quote.inclusions) && quote.inclusions.length
+      ? quote.inclusions
+      : [quote.note, "PDF quote available", "Subject to live availability"];
+    const totalPrice = toPdfCurrency(quote.price);
+    const perPerson = toPdfCurrency(getPerPersonPrice(quote.price, request.adults, request.children));
+    const deposit = toPdfCurrency(getDepositPrice(quote.price));
+    const updated = formatQuoteUpdatedDate();
+
+    rect(0, 0, pageWidth, pageHeight, "#eef5fb");
+    rect(0, 736, pageWidth, 56, "#ffffff");
+    text(quote.agent, 45, 768, 22, "#12315d", true);
+    text("Holiday quote for " + wrapOneLine(request.title, 44), 45, 750, 10, "#65728a", false);
+    text("Last updated: " + updated, 394, 763, 8, "#65728a", false);
+    text("Reference: " + request.id, 394, 750, 8, "#65728a", true);
+
+    rect(45, 642, 152, 78, "#123f7a");
+    text("Total Price", 66, 696, 10, "#ffffff", true);
+    text(totalPrice, 66, 671, 23, "#ffffff", true);
+    text("Per Person: " + perPerson, 66, 656, 9, "#ffffff", false);
+    text("Deposit Today: " + deposit, 66, 645, 9, "#ffffff", false);
+
+    rect(214, 642, 353, 78, "#ffffff", "#d8e2ee");
+    rect(232, 659, 44, 44, "#eaf4ff", "#cfe4ff");
+    text(getInitials(quote.agent), 245, 675, 14, "#1476ff", true);
+    text(quote.agent, 292, 697, 17, "#102a4c", true);
+    text("Agent company quote", 292, 682, 10, "#65728a", false);
+    text("Rating: " + (quote.rating || "4.7") + " / 5  |  " + (quote.reviews || "Verified agent"), 292, 668, 10, "#8a5a00", true);
+    pill("Quote ready", 463, 688, 76, 18, "#e9f8ef", "#0c7040");
+    pill("ATOL", 463, 662, 34, 18, "#f4f8fe", "#143f78");
+    pill("ABTA / CTA", 503, 662, 58, 18, "#f4f8fe", "#143f78");
+
+    sectionTitle("Booking Details", 45, 615);
+    detailBox(45, 567, 164, "Holiday", request.title);
+    detailBox(224, 567, 164, "Destination", request.destination);
+    detailBox(403, 567, 164, "Travel Dates", dates);
+    detailBox(45, 521, 164, "Departure", request.departureAirport || "Departure airport TBC");
+    detailBox(224, 521, 164, "Passengers", passengers);
+    detailBox(403, 521, 164, "Original Budget", toPdfCurrency(request.budget));
+
+    sectionTitle("Holiday Information", 45, 488);
+    rect(45, 416, 522, 58, "#ffffff", "#d8e2ee");
+    text(request.title, 62, 455, 14, "#102a4c", true);
+    drawWrapped(quote.note, 62, 439, 78, 10, 9, "#65728a", false);
+    let inclusionY = 420;
+    inclusions.slice(0, 3).forEach((item) => {
+      rect(62, inclusionY + 2, 5, 5, "#1476ff");
+      text(wrapOneLine(item, 72), 74, inclusionY, 9, "#102a4c", true);
+      inclusionY -= 12;
+    });
+
+    sectionTitle("Flight Details", 45, 390);
+    flightBox(45, 304, "Departure Flight", "Outbound", request.departureAirport || "UK airport", request.destination, formatDate(request.dateFrom));
+    flightBox(319, 304, "Return Flight", "Inbound", request.destination, request.departureAirport || "UK airport", formatDate(request.dateTo));
+
+    sectionTitle("Customer Decision", 45, 274);
+    rect(45, 196, 336, 62, "#ffffff", "#d8e2ee");
+    text("Terms & Conditions", 62, 238, 12, "#102a4c", true);
+    drawWrapped("Customer accepts the agent terms, privacy policy and live availability checks before confirming the booking.", 62, 222, 56, 10, 8, "#65728a", false);
+    drawWrapped("All prices are subject to live availability at the point of booking.", 62, 201, 58, 10, 8, "#65728a", false);
+
+    rect(397, 196, 170, 62, "#ffffff", "#d8e2ee");
+    text("Customer action", 414, 238, 12, "#102a4c", true);
+    rect(414, 208, 61, 22, "#0c7040");
+    text("Accept", 429, 215, 10, "#ffffff", true);
+    rect(487, 208, 61, 22, "#fff1f1", "#f1caca");
+    text("Reject", 503, 215, 10, "#bd2d2d", true);
+
+    rect(45, 154, 522, 28, "#123f7a");
+    text("Company Name: " + quote.agent + "  |  ATOL / ABTA / CTA approved  |  Smart Quote format", 62, 165, 8, "#ffffff", true);
+
+    function sectionTitle(label, x, y) {
+      text(label, x, y, 14, "#1476ff", true);
+      line(x + 124, y + 4, 567, y + 4, "#d8e2ee");
+    }
+
+    function detailBox(x, y, w, label, value) {
+      rect(x, y, w, 40, "#ffffff", "#d8e2ee");
+      text(label, x + 12, y + 24, 8, "#65728a", true);
+      text(wrapOneLine(value, 22), x + 12, y + 9, 10, "#102a4c", true);
+    }
+
+    function flightBox(x, y, title, type, from, to, date) {
+      rect(x, y, 248, 74, "#ffffff", "#d8e2ee");
+      text(title, x + 14, y + 54, 12, "#102a4c", true);
+      text("Type", x + 14, y + 39, 8, "#65728a", true);
+      text(type, x + 72, y + 39, 9, "#102a4c", true);
+      text("From", x + 14, y + 26, 8, "#65728a", true);
+      text(wrapOneLine(from, 22), x + 72, y + 26, 9, "#102a4c", true);
+      text("To", x + 14, y + 13, 8, "#65728a", true);
+      text(wrapOneLine(to, 22), x + 72, y + 13, 9, "#102a4c", true);
+      text(date, x + 166, y + 13, 9, "#1476ff", true);
+    }
+
+    function pill(label, x, y, w, h, fill, color) {
+      rect(x, y, w, h, fill, "#d8e2ee");
+      text(label, x + 8, y + 7, 8, color, true);
+    }
+
+    function drawWrapped(value, x, y, maxLength, lineHeight, size, color, bold) {
+      wrapText(value, maxLength).slice(0, 3).forEach((lineText, index) => {
+        text(lineText, x, y - (index * lineHeight), size, color, bold);
+      });
+    }
+
+    function text(value, x, y, size, color, bold) {
+      ops.push("BT", `${pdfColor(color)} rg`, `/${bold ? "F2" : "F1"} ${size} Tf`, `${x} ${y} Td`, `(${escapePdfText(value)}) Tj`, "ET");
+    }
+
+    function rect(x, y, w, h, fill, stroke) {
+      ops.push(`${pdfColor(fill)} rg`, `${x} ${y} ${w} ${h} re`, "f");
+      if (stroke) {
+        ops.push(`${pdfColor(stroke)} RG`, "0.8 w", `${x} ${y} ${w} ${h} re`, "S");
+      }
+    }
+
+    function line(x1, y1, x2, y2, color) {
+      ops.push(`${pdfColor(color)} RG`, "0.8 w", `${x1} ${y1} m`, `${x2} ${y2} l`, "S");
+    }
+
+    const stream = ops.join("\n");
     const objects = [
       "<< /Type /Catalog /Pages 2 0 R >>",
       "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-      "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
-      "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+      "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>",
+      "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+      "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>",
       `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`
     ];
     let pdf = "%PDF-1.4\n";
@@ -473,7 +1044,100 @@
     return pdf;
   }
 
+  function pdfColor(hex) {
+    const value = String(hex || "#000000").replace("#", "");
+    const r = parseInt(value.slice(0, 2), 16) / 255;
+    const g = parseInt(value.slice(2, 4), 16) / 255;
+    const b = parseInt(value.slice(4, 6), 16) / 255;
+    return `${trimPdfNumber(r)} ${trimPdfNumber(g)} ${trimPdfNumber(b)}`;
+  }
+
+  function trimPdfNumber(value) {
+    return Number(value).toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
+  }
+
+  function getPerPersonPrice(price, adults, children) {
+    const total = parseMoney(price);
+    const passengers = Math.max(1, (Number(adults) || 0) + (Number(children) || 0));
+    return total ? `GBP ${Math.round(total / passengers).toLocaleString("en-GB")}` : "TBC";
+  }
+
+  function getDepositPrice(price) {
+    const total = parseMoney(price);
+    return total ? `GBP ${Math.max(99, Math.round(total * 0.1)).toLocaleString("en-GB")}` : "TBC";
+  }
+
+  function parseMoney(value) {
+    const numeric = String(value || "").replace(/[^\d.]/g, "");
+    return Number(numeric) || 0;
+  }
+
+  function normalisePound(value) {
+    const text = String(value || "").trim();
+    if (!text) return "TBC";
+    if (/flexible/i.test(text)) return "Flexible";
+
+    const amount = parseMoney(text);
+    if (amount) {
+      return `${String.fromCharCode(163)}${Math.round(amount).toLocaleString("en-GB")}`;
+    }
+
+    return text
+      .replaceAll("Â£", String.fromCharCode(163))
+      .replaceAll("Ã‚Â£", String.fromCharCode(163))
+      .replaceAll("GBP ", String.fromCharCode(163));
+  }
+
+  function toPdfCurrency(value) {
+    return normalisePound(value);
+    return String(value || "TBC").replaceAll("£", "GBP ").replaceAll("Â£", "GBP ");
+  }
+
+  function formatQuoteUpdatedDate() {
+    return new Intl.DateTimeFormat("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    }).format(new Date());
+  }
+
+  function wrapText(value, maxLength) {
+    const words = String(value || "").split(/\s+/).filter(Boolean);
+    const lines = [];
+    let line = "";
+
+    words.forEach((word) => {
+      const next = line ? `${line} ${word}` : word;
+      if (next.length > maxLength && line) {
+        lines.push(line);
+        line = word;
+      } else {
+        line = next;
+      }
+    });
+
+    if (line) lines.push(line);
+    return lines.length ? lines : [""];
+  }
+
+  function wrapOneLine(value, maxLength) {
+    const text = String(value || "");
+    return text.length > maxLength ? `${text.slice(0, maxLength - 3)}...` : text;
+  }
+
   function escapePdfText(value) {
+    const pound = String.fromCharCode(163);
+    return String(value ?? "")
+      .replaceAll("Â£", pound)
+      .replaceAll("Ã‚Â£", pound)
+      .replaceAll("GBP ", pound)
+      .replaceAll("\\", "\\\\")
+      .replaceAll("(", "\\(")
+      .replaceAll(")", "\\)")
+      .replaceAll(pound, "\\243")
+      .replace(/[^\x20-\x7e]/g, "");
     return String(value ?? "")
       .replaceAll("£", "GBP ")
       .replaceAll("\u00a3", "GBP ")
@@ -513,10 +1177,6 @@
 
     if (signedInClient) {
       formNode.elements.email.value = signedInClient.email;
-      formNode.elements.password.value = DEMO_PASSWORD;
-    } else {
-      formNode.elements.email.value = "person@mail.com";
-      formNode.elements.password.value = DEMO_PASSWORD;
     }
 
     formNode.addEventListener("submit", (event) => {
@@ -526,7 +1186,7 @@
       const client = DEMO_CLIENTS.find((item) => item.email === email);
 
       if (!client || password !== DEMO_PASSWORD) {
-        if (errorNode) errorNode.textContent = "Use one of the demo client emails and password 12345.";
+        if (errorNode) errorNode.textContent = "We could not sign you in with those details.";
         return;
       }
 
