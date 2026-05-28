@@ -2284,6 +2284,113 @@ section h2 strong {
   color: #bd2d2d;
 }
 
+.accept-confirmation-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(9, 20, 42, 0.56);
+}
+
+.accept-confirmation-box {
+  position: relative;
+  width: min(520px, 100%);
+  padding: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 28px 70px rgba(5, 18, 38, 0.28);
+}
+
+.accept-confirmation-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--qmt-border);
+  border-radius: 50%;
+  background: #ffffff;
+  color: var(--qmt-text-muted);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.accept-confirmation-box h2 {
+  margin: 8px 42px 10px 0;
+  color: var(--qmt-text-dark);
+  font-size: 24px;
+}
+
+.accept-confirmation-box p {
+  margin: 0;
+  color: var(--qmt-text-muted);
+  line-height: 1.5;
+  font-weight: 700;
+}
+
+.accept-confirmation-summary {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0;
+  padding: 14px;
+  border-radius: 14px;
+  background: #f5f8fc;
+}
+
+.accept-confirmation-summary div {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 12px;
+}
+
+.accept-confirmation-summary dt,
+.accept-confirmation-summary dd {
+  margin: 0;
+}
+
+.accept-confirmation-summary dt {
+  color: var(--qmt-text-muted);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.accept-confirmation-summary dd {
+  color: var(--qmt-text-dark);
+  font-weight: 900;
+}
+
+.accept-confirmation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.accept-confirmation-actions button {
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.accept-confirmation-actions button:first-child {
+  border: 1px solid var(--qmt-border);
+  background: #ffffff;
+  color: var(--qmt-text-dark);
+}
+
+.accept-confirmation-actions button:last-child {
+  border: 0;
+  background: #0c7040;
+  color: #ffffff;
+  box-shadow: 0 14px 30px rgba(12, 112, 64, 0.22);
+}
+
 .quote-request-side {
   display: flex;
   flex-direction: column;

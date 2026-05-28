@@ -369,8 +369,14 @@
       return;
     }
 
-    if (action === "accept-quote" || action === "reject-quote") {
-      setQuoteDecision(requestId, agent, action === "accept-quote" ? "accepted" : "rejected");
+    if (action === "accept-quote") {
+      const request = getDashboardRequests().find((item) => item.id === requestId);
+      if (request) showAcceptConfirmation(request, agent);
+      return;
+    }
+
+    if (action === "reject-quote") {
+      setQuoteDecision(requestId, agent, "rejected");
       expandedQuoteRequests.add(requestId);
       renderDashboardRequests();
       return;
@@ -434,6 +440,52 @@
 
     decisions[requestId][agent] = decision;
     saveQuoteDecisions(decisions);
+  }
+
+  function showAcceptConfirmation(request, agent) {
+    closeAcceptConfirmation();
+    const client = getCurrentClient();
+    const modal = document.createElement("div");
+    modal.className = "accept-confirmation-backdrop";
+    modal.innerHTML = `
+      <section class="accept-confirmation-box" role="dialog" aria-modal="true" aria-labelledby="acceptConfirmTitle">
+        <button class="accept-confirmation-close" type="button" data-confirm-action="cancel" aria-label="Close confirmation">x</button>
+        <span class="premium-agent-badge">Final confirmation</span>
+        <h2 id="acceptConfirmTitle">Send customer details to ${escapeHtml(agent)}?</h2>
+        <p>
+          Confirming will email the customer's contact details and trip request to
+          <strong>${escapeHtml(agent)}</strong> so they can complete the booking.
+        </p>
+        <dl class="accept-confirmation-summary">
+          <div><dt>Customer</dt><dd>${escapeHtml(client?.name || "Customer")} ${client?.email ? `(${escapeHtml(client.email)})` : ""}</dd></div>
+          <div><dt>Holiday</dt><dd>${escapeHtml(request.title)}</dd></div>
+          <div><dt>Reference</dt><dd>${escapeHtml(request.id)}</dd></div>
+        </dl>
+        <div class="accept-confirmation-actions">
+          <button type="button" data-confirm-action="cancel">Cancel</button>
+          <button type="button" data-confirm-action="confirm">Confirm & send to agent</button>
+        </div>
+      </section>
+    `;
+
+    modal.addEventListener("click", (event) => {
+      const action = event.target.closest("[data-confirm-action]")?.dataset.confirmAction;
+      if (!action && event.target !== modal) return;
+
+      if (action === "confirm") {
+        setQuoteDecision(request.id, agent, "accepted");
+        expandedQuoteRequests.add(request.id);
+        renderDashboardRequests();
+      }
+
+      closeAcceptConfirmation();
+    });
+
+    document.body.appendChild(modal);
+  }
+
+  function closeAcceptConfirmation() {
+    document.querySelector(".accept-confirmation-backdrop")?.remove();
   }
 
   function downloadQuotePdf(request, quote) {
@@ -968,36 +1020,37 @@
     detailBox(224, 521, 164, "Passengers", passengers);
     detailBox(403, 521, 164, "Original Budget", toPdfCurrency(request.budget));
 
-    sectionTitle("Holiday Information", 45, 488);
-    rect(45, 416, 522, 58, "#ffffff", "#d8e2ee");
-    text(request.title, 62, 455, 14, "#102a4c", true);
-    drawWrapped(quote.note, 62, 439, 78, 10, 9, "#65728a", false);
-    let inclusionY = 420;
+    sectionTitle("Holiday Information", 45, 492);
+    rect(45, 386, 522, 88, "#ffffff", "#d8e2ee");
+    holidayVisual(397, 404, 148, 52, request);
+    text(request.title, 62, 456, 14, "#102a4c", true);
+    drawWrapped(quote.note, 62, 440, 49, 10, 9, "#65728a", false);
+    let inclusionY = 414;
     inclusions.slice(0, 3).forEach((item) => {
       rect(62, inclusionY + 2, 5, 5, "#1476ff");
-      text(wrapOneLine(item, 72), 74, inclusionY, 9, "#102a4c", true);
+      text(wrapOneLine(item, 47), 74, inclusionY, 9, "#102a4c", true);
       inclusionY -= 12;
     });
 
-    sectionTitle("Flight Details", 45, 390);
-    flightBox(45, 304, "Departure Flight", "Outbound", request.departureAirport || "UK airport", request.destination, formatDate(request.dateFrom));
-    flightBox(319, 304, "Return Flight", "Inbound", request.destination, request.departureAirport || "UK airport", formatDate(request.dateTo));
+    sectionTitle("Flight Details", 45, 360);
+    flightBox(45, 270, "Departure Flight", "Outbound", request.departureAirport || "UK airport", request.destination, formatDate(request.dateFrom));
+    flightBox(319, 270, "Return Flight", "Inbound", request.destination, request.departureAirport || "UK airport", formatDate(request.dateTo));
 
-    sectionTitle("Customer Decision", 45, 274);
-    rect(45, 196, 336, 62, "#ffffff", "#d8e2ee");
-    text("Terms & Conditions", 62, 238, 12, "#102a4c", true);
-    drawWrapped("Customer accepts the agent terms, privacy policy and live availability checks before confirming the booking.", 62, 222, 56, 10, 8, "#65728a", false);
-    drawWrapped("All prices are subject to live availability at the point of booking.", 62, 201, 58, 10, 8, "#65728a", false);
+    sectionTitle("Customer Decision", 45, 238);
+    rect(45, 154, 336, 68, "#ffffff", "#d8e2ee");
+    text("Terms & Conditions", 62, 204, 12, "#102a4c", true);
+    drawWrapped("Customer accepts the agent terms, privacy policy and live availability checks before confirming the booking.", 62, 188, 62, 10, 8, "#65728a", false);
+    drawWrapped("All prices are subject to live availability at the point of booking.", 62, 166, 62, 10, 8, "#65728a", false);
 
-    rect(397, 196, 170, 62, "#ffffff", "#d8e2ee");
-    text("Customer action", 414, 238, 12, "#102a4c", true);
-    rect(414, 208, 61, 22, "#0c7040");
-    text("Accept", 429, 215, 10, "#ffffff", true);
-    rect(487, 208, 61, 22, "#fff1f1", "#f1caca");
-    text("Reject", 503, 215, 10, "#bd2d2d", true);
+    rect(397, 154, 170, 68, "#ffffff", "#d8e2ee");
+    text("Customer action", 414, 204, 12, "#102a4c", true);
+    rect(414, 173, 61, 22, "#0c7040");
+    text("Accept", 429, 180, 10, "#ffffff", true);
+    rect(487, 173, 61, 22, "#fff1f1", "#f1caca");
+    text("Reject", 503, 180, 10, "#bd2d2d", true);
 
-    rect(45, 154, 522, 28, "#123f7a");
-    text("Company Name: " + quote.agent + "  |  ATOL / ABTA / CTA approved  |  Smart Quote format", 62, 165, 8, "#ffffff", true);
+    rect(45, 116, 522, 28, "#123f7a");
+    text("Company Name: " + quote.agent + "  |  ATOL / ABTA / CTA approved  |  Smart Quote format", 62, 127, 8, "#ffffff", true);
 
     function sectionTitle(label, x, y) {
       text(label, x, y, 14, "#1476ff", true);
@@ -1013,18 +1066,60 @@
     function flightBox(x, y, title, type, from, to, date) {
       rect(x, y, 248, 74, "#ffffff", "#d8e2ee");
       text(title, x + 14, y + 54, 12, "#102a4c", true);
+      text(date, x + 164, y + 55, 8, "#1476ff", true);
       text("Type", x + 14, y + 39, 8, "#65728a", true);
       text(type, x + 72, y + 39, 9, "#102a4c", true);
       text("From", x + 14, y + 26, 8, "#65728a", true);
-      text(wrapOneLine(from, 22), x + 72, y + 26, 9, "#102a4c", true);
+      text(wrapOneLine(from, 27), x + 72, y + 26, 9, "#102a4c", true);
       text("To", x + 14, y + 13, 8, "#65728a", true);
-      text(wrapOneLine(to, 22), x + 72, y + 13, 9, "#102a4c", true);
-      text(date, x + 166, y + 13, 9, "#1476ff", true);
+      text(wrapOneLine(to, 27), x + 72, y + 13, 9, "#102a4c", true);
     }
 
     function pill(label, x, y, w, h, fill, color) {
       rect(x, y, w, h, fill, "#d8e2ee");
       text(label, x + 8, y + 7, 8, color, true);
+    }
+
+    function holidayVisual(x, y, w, h, requestData) {
+      const theme = `${requestData.title || ""} ${requestData.tourType || ""} ${requestData.destination || ""}`.toLowerCase();
+      rect(x, y, w, h, "#dff1ff", "#cbdcec");
+
+      if (theme.includes("city") || theme.includes("new york") || theme.includes("paris") || theme.includes("rome")) {
+        rect(x, y, w, 16, "#b8d8f2");
+        rect(x + 12, y + 16, 16, 24, "#214a76");
+        rect(x + 34, y + 10, 20, 34, "#2f6696");
+        rect(x + 60, y + 20, 16, 20, "#173a61");
+        rect(x + 83, y + 12, 24, 30, "#2b5d88");
+        rect(x + 114, y + 24, 16, 16, "#173a61");
+        return;
+      }
+
+      if (theme.includes("snow") || theme.includes("lapland") || theme.includes("ski") || theme.includes("norway") || theme.includes("finland")) {
+        rect(x, y, w, 15, "#c7e4ff");
+        line(x + 12, y + 15, x + 48, y + 45, "#ffffff");
+        line(x + 48, y + 45, x + 86, y + 15, "#ffffff");
+        line(x + 58, y + 15, x + 98, y + 42, "#eaf6ff");
+        line(x + 98, y + 42, x + 138, y + 15, "#eaf6ff");
+        rect(x + 20, y + 12, 112, 6, "#ffffff");
+        return;
+      }
+
+      if (theme.includes("cruise") || theme.includes("ship")) {
+        rect(x, y, w, 18, "#1e8bd1");
+        rect(x + 28, y + 16, 82, 12, "#ffffff", "#d8e2ee");
+        rect(x + 42, y + 28, 54, 8, "#dff1ff", "#cbdcec");
+        rect(x + 56, y + 36, 26, 6, "#ffffff", "#d8e2ee");
+        line(x + 16, y + 15, x + 126, y + 15, "#ffffff");
+        line(x + 24, y + 11, x + 138, y + 11, "#a7ddff");
+        return;
+      }
+
+      rect(x, y, w, 14, "#1e8bd1");
+      rect(x, y + 14, w, 12, "#f3d391");
+      rect(x + 104, y + 36, 18, 10, "#ffd257");
+      line(x + 24, y + 18, x + 42, y + 42, "#1c7d68");
+      line(x + 42, y + 42, x + 60, y + 27, "#1c7d68");
+      line(x + 42, y + 42, x + 33, y + 30, "#1c7d68");
     }
 
     function drawWrapped(value, x, y, maxLength, lineHeight, size, color, bold) {
